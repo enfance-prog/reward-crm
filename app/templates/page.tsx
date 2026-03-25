@@ -11,7 +11,7 @@ const VARIABLE_DESC: Record<string, string> = {
 
 interface Template { id: number; name: string; subject: string; body: string; is_default: boolean; created_at: string; }
 interface FormState { name: string; subject: string; body: string; is_default: boolean; }
-const emptyForm = (): FormState => ({ name: "", subject: "[yyyy]年[m]月 - 特典配布", body: "こんにちは [name]\n\n[category] をお渡しします。以下のリンクをクリックしてダウンロードしてください。\n\n[link_url]", is_default: false });
+const emptyForm = (): FormState => ({ name: "", subject: "[yyyy]年[m]月 - 特典配布", body: "こんにちは [name] さん\n\n[category] 特典をお渡しします。以下のリンクをクリックしてダウンロードしてください。\n\n[link_url]", is_default: false });
 
 // ---- プレビュー変数展開 ----
 function previewExpand(text: string) {
