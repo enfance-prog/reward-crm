@@ -17,6 +17,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // 管理用 API は x-admin-secret で各ルートが認証する（curl / サーバー間呼び出し用）
+  if (pathname.startsWith("/api/admin")) {
+    return NextResponse.next();
+  }
+
   const response = NextResponse.next();
   const session = await getIronSession<SessionData>(request, response, sessionOptions);
 
