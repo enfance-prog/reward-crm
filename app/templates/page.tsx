@@ -6,12 +6,12 @@ import AppLayout from "@/components/AppLayout";
 const VARIABLES = ["[yyyy]", "[m]", "[name]", "[category]", "[link_url]"];
 const VARIABLE_DESC: Record<string, string> = {
   "[yyyy]": "年（自動）", "[m]": "月（自動）",
-  "[name]": "リスナー名", "[category]": "特典カテゴリ", "[link_url]": "配布リンク",
+  "[name]": "リスナー名", "[category]": "カテゴリ", "[link_url]": "配布リンク",
 };
 
 interface Template { id: number; name: string; subject: string; body: string; is_default: boolean; created_at: string; }
 interface FormState { name: string; subject: string; body: string; is_default: boolean; }
-const emptyForm = (): FormState => ({ name: "", subject: "[yyyy]年[m]月 - 特典配布", body: "こんにちは [name] さん\n\n[category] の特典をお渡しします。以下のリンクをクリックしてダウンロードしてください。\n\n[link_url]", is_default: false });
+const emptyForm = (): FormState => ({ name: "", subject: "[yyyy]年[m]月 - 特典配布", body: "こんにちは [name]\n\n[category] をお渡しします。以下のリンクをクリックしてダウンロードしてください。\n\n[link_url]", is_default: false });
 
 // ---- プレビュー変数展開 ----
 function previewExpand(text: string) {
@@ -19,8 +19,8 @@ function previewExpand(text: string) {
   return text
     .replace(/\[yyyy\]/g, String(now.getFullYear()))
     .replace(/\[m\]/g, String(now.getMonth() + 1))
-    .replace(/\[name\]/g, "サンプルさん")
-    .replace(/\[category\]/g, "サブスク特典")
+    .replace(/\[name\]/g, "サンプル")
+    .replace(/\[category\]/g, "サブスク")
     .replace(/\[link_url\]/g, "https://example.com/sample");
 }
 
@@ -272,12 +272,6 @@ export default function TemplatesPage() {
   const [deleteTarget, setDeleteTarget] = useState<Template | null>(null);
   const [titleVisible, setTitleVisible] = useState(false);
 
-  useEffect(() => {
-    const t = setTimeout(() => setTitleVisible(true), 50);
-    fetchTemplates();
-    return () => clearTimeout(t);
-  }, []);
-
   const fetchTemplates = async () => {
     setLoading(true);
     const res = await fetch("/api/templates");
@@ -285,6 +279,18 @@ export default function TemplatesPage() {
     setTemplates(data);
     setLoading(false);
   };
+
+  useEffect(() => {
+    const t = setTimeout(() => setTitleVisible(true), 50);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      void fetchTemplates();
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, []);
 
   const handleAdd = async (form: FormState) => {
     setFormLoading(true); setError("");
