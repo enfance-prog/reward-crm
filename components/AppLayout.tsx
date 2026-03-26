@@ -95,7 +95,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <style jsx>{`
         .app-root {
           display: flex;
-          min-height: 100vh;
+          flex: 1;
+          min-height: 0;
+          width: 100%;
           background: #EDEAE3;
           font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif;
           position: relative;
@@ -132,6 +134,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         .sidebar {
           width: 240px;
           flex-shrink: 0;
+          align-self: stretch;
           background: rgba(255,255,255,0.7);
           backdrop-filter: blur(20px);
           border-right: 1px solid rgba(0,0,0,0.06);
@@ -140,7 +143,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           padding: 28px 16px;
           position: sticky;
           top: 0;
-          height: 100vh;
+          min-height: 0;
           z-index: 50;
           transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
         }

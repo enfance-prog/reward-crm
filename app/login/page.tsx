@@ -116,7 +116,9 @@ export default function LoginPage() {
 
       <style jsx>{`
         .login-root {
-          min-height: 100vh;
+          flex: 1;
+          min-height: 0;
+          width: 100%;
           background: #EDEAE3;
           display: flex;
           align-items: center;
