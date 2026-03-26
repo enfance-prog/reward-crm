@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { usePiroBurst } from "@/components/PiroBurstProvider";
 
 export default function LoginPage() {
   const [handle, setHandle] = useState("");
@@ -9,6 +11,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const spawnBurst = usePiroBurst();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,12 +48,21 @@ export default function LoginPage() {
       <div className="blob blob-mint" />
 
       <main className="login-card">
-        <div className="login-logo">
-          <span className="logo-mark">R</span>
-        </div>
+        <button
+          type="button"
+          className="login-logo-btn"
+          onClick={(e) => spawnBurst(e.clientX, e.clientY)}
+          aria-label="Reward-CRM"
+        >
+          <span className="logo-mark">
+            <Image src="/piro.png" alt="" width={48} height={48} className="login-piro-img" priority />
+          </span>
+        </button>
 
         <div className="login-header">
-          <h1 className="login-title">reward<span className="title-accent">crm</span></h1>
+          <h1 className="login-title">
+            reward<span className="title-accent">crm</span>
+          </h1>
           <p className="login-subtitle">特典配布管理システム</p>
         </div>
 
@@ -196,10 +208,18 @@ export default function LoginPage() {
         }
 
         /* ロゴ */
-        .login-logo {
+        .login-logo-btn {
           display: flex;
           justify-content: center;
-          margin-bottom: 24px;
+          margin: 0 auto 24px;
+          padding: 0;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          border-radius: 16px;
+        }
+        .login-logo-btn:hover .logo-mark {
+          box-shadow: 0 8px 28px rgba(0,0,0,0.12);
         }
         .logo-mark {
           display: flex;
@@ -207,13 +227,15 @@ export default function LoginPage() {
           justify-content: center;
           width: 52px;
           height: 52px;
-          background: #1A1A1A;
-          color: #EDEAE3;
+          background: #fff;
+          border: 1px solid rgba(0,0,0,0.08);
           border-radius: 14px;
-          font-size: 22px;
-          font-weight: 700;
-          letter-spacing: -0.5px;
+          overflow: hidden;
           animation: logoIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+        }
+        .login-piro-img {
+          object-fit: cover;
+          border-radius: 12px;
         }
         @keyframes logoIn {
           from { opacity: 0; transform: scale(0.7) rotate(-10deg); }

@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { usePiroBurst } from "@/components/PiroBurstProvider";
 
 const NAV_ITEMS = [
   { href: "/dashboard",  label: "ダッシュボード", icon: "◈" },
@@ -16,8 +18,13 @@ const NAV_ITEMS = [
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const spawnBurst = usePiroBurst();
   const [handle, setHandle] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const onPiroInteract = (e: React.MouseEvent) => {
+    spawnBurst(e.clientX, e.clientY);
+  };
 
   useEffect(() => {
     fetch("/api/auth/session")
@@ -44,7 +51,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* サイドバー */}
       <aside className={`sidebar ${sidebarOpen ? "sidebar--open" : ""}`}>
         <div className="sidebar-logo">
-          <span className="logo-mark">R</span>
+          <button type="button" className="logo-mark-btn" onClick={onPiroInteract} aria-label="Reward-CRM">
+            <span className="logo-mark">
+              <Image src="/piro.png" alt="" width={32} height={32} className="logo-piro-img" priority />
+            </span>
+          </button>
           <span className="logo-text">reward<span className="logo-sub">crm</span></span>
         </div>
 
@@ -83,6 +94,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="mobile-header">
           <button className="hamburger" onClick={() => setSidebarOpen(true)}>
             <span /><span /><span />
+          </button>
+          <button type="button" className="mobile-logo-mark-btn" onClick={onPiroInteract} aria-label="Reward-CRM">
+            <Image src="/piro.png" alt="" width={26} height={26} className="mobile-piro-img" />
           </button>
           <span className="mobile-logo">rewardcrm</span>
         </header>
@@ -154,17 +168,32 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           gap: 10px;
           padding: 0 8px 32px;
         }
+        .logo-mark-btn {
+          margin: 0;
+          padding: 0;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          border-radius: 12px;
+          flex-shrink: 0;
+        }
+        .logo-mark-btn:hover .logo-mark {
+          box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+        }
         .logo-mark {
           display: flex;
           align-items: center;
           justify-content: center;
           width: 36px; height: 36px;
-          background: #1A1A1A;
-          color: #EDEAE3;
+          background: #fff;
+          border: 1px solid rgba(0,0,0,0.08);
           border-radius: 10px;
-          font-size: 16px;
-          font-weight: 700;
           flex-shrink: 0;
+          overflow: hidden;
+        }
+        .logo-piro-img {
+          object-fit: cover;
+          border-radius: 8px;
         }
         .logo-text {
           font-size: 17px;
@@ -207,7 +236,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           background: #222222;
           color: #FFFFFF;
         }
-        .nav-icon { font-size: 15px; width: 20px; text-align: center; }
+        .nav-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
         .nav-label { font-weight: 500; }
         .nav-indicator {
           width: 6px; height: 6px;
@@ -309,6 +338,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           height: 2px;
           background: #1A1A1A;
           border-radius: 2px;
+        }
+        .mobile-logo-mark-btn {
+          margin: 0;
+          padding: 0;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          border-radius: 8px;
+          flex-shrink: 0;
+        }
+        .mobile-logo-mark-btn:hover .mobile-piro-img {
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .mobile-piro-img {
+          border-radius: 8px;
+          object-fit: cover;
+          display: block;
         }
         .mobile-logo {
           font-size: 16px;

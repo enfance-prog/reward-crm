@@ -83,3 +83,43 @@ aside .user-handle {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* ロゴクリック時の星が飛び散る演出（ゆっくり開いて花火のように留まってから消える） */
+@keyframes star-scatter-fly {
+  0% {
+    transform: translate(-50%, -50%) translate(0, 0) scale(var(--star-s0, 0.2)) rotate(0deg);
+    opacity: 0.75;
+    filter: drop-shadow(0 0 8px rgba(255, 230, 160, 1));
+  }
+  /* 中心から外へ広がる（全体の約3割の時間で到達） */
+  32% {
+    transform: translate(-50%, -50%)
+      translate(calc(var(--star-tx) * 0.92), calc(var(--star-ty) * 0.92))
+      scale(0.95)
+      rotate(0deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 12px rgba(255, 240, 190, 0.95));
+  }
+  /* 開いた状態をキープ（花火のキラッとした滞留） */
+  62% {
+    transform: translate(-50%, -50%) translate(var(--star-tx), var(--star-ty))
+      scale(0.62)
+      rotate(0deg);
+    opacity: 0.88;
+    filter: drop-shadow(0 0 8px rgba(255, 220, 150, 0.55));
+  }
+  100% {
+    transform: translate(-50%, -50%) translate(var(--star-tx), var(--star-ty))
+      scale(0.08)
+      rotate(var(--star-rot));
+    opacity: 0;
+    filter: drop-shadow(0 0 2px rgba(255, 200, 80, 0.2));
+  }
+}
+
+.star-burst-particle {
+  pointer-events: none;
+  will-change: transform, opacity;
+  font-weight: 700;
+  text-shadow: 0 0 6px rgba(255, 235, 180, 0.85);
+}
