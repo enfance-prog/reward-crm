@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import AppLayout from "@/components/AppLayout";
 
 // ---- ストレージサービスの判定 ----
@@ -184,6 +184,8 @@ function PackageCard({ pkg, onEdit, onDelete, delay }: {
 }) {
   const [visible, setVisible] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [menuDropUp, setMenuDropUp] = useState(false);
+  const menuWrapRef = useRef<HTMLDivElement>(null);
   const service = detectService(pkg.link_url);
   const sent = Number(pkg.sent_count);
   const pending = Number(pkg.pending_count);
@@ -193,8 +195,43 @@ function PackageCard({ pkg, onEdit, onDelete, delay }: {
     return () => clearTimeout(t);
   }, [delay]);
 
+  const updateMenuPlacement = useCallback(() => {
+    if (!menuWrapRef.current) return;
+    const el = menuWrapRef.current;
+    const btn = el.querySelector(".menu-btn");
+    if (!(btn instanceof HTMLElement)) return;
+    const r = btn.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - r.bottom;
+    const spaceAbove = r.top;
+    const approxMenu = 96;
+    setMenuDropUp(spaceBelow < approxMenu && spaceAbove > spaceBelow);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!menuOpen) return;
+    updateMenuPlacement();
+  }, [menuOpen, updateMenuPlacement]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    window.addEventListener("resize", updateMenuPlacement);
+    return () => window.removeEventListener("resize", updateMenuPlacement);
+  }, [menuOpen, updateMenuPlacement]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = (e: MouseEvent) => {
+      const t = e.target;
+      if (menuWrapRef.current && t instanceof Node && !menuWrapRef.current.contains(t)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [menuOpen]);
+
   return (
-    <div className={`pkg-card ${visible ? "pkg-card--visible" : ""}`}>
+    <div className={`pkg-card ${visible ? "pkg-card--visible" : ""} ${menuOpen ? "pkg-card--menu-open" : ""}`}>
       {/* カテゴリバー */}
       <div className="category-bar" style={{ background: `${service.color}18` }}>
         <span className="category-text">{pkg.category}</span>
@@ -221,12 +258,12 @@ function PackageCard({ pkg, onEdit, onDelete, delay }: {
             {sent === 0 && pending === 0 && <span className="stat-chip stat-none">未使用</span>}
           </div>
           <div className="card-actions">
-            <div className="menu-wrapper">
-              <button className="menu-btn" onClick={() => setMenuOpen((v) => !v)}>⋯</button>
+            <div className="menu-wrapper" ref={menuWrapRef}>
+              <button type="button" className="menu-btn" aria-expanded={menuOpen} aria-haspopup="true" onClick={() => setMenuOpen((v) => !v)}>⋯</button>
               {menuOpen && (
-                <div className="menu-dropdown">
-                  <button className="menu-item" onClick={() => { setMenuOpen(false); onEdit(); }}>編集</button>
-                  <button className="menu-item menu-item--danger" onClick={() => { setMenuOpen(false); onDelete(); }}>削除</button>
+                <div className={`menu-dropdown ${menuDropUp ? "menu-dropdown--up" : ""}`} role="menu">
+                  <button type="button" className="menu-item" role="menuitem" onClick={() => { setMenuOpen(false); onEdit(); }}>編集</button>
+                  <button type="button" className="menu-item menu-item--danger" role="menuitem" onClick={() => { setMenuOpen(false); onDelete(); }}>削除</button>
                 </div>
               )}
             </div>
@@ -236,21 +273,36 @@ function PackageCard({ pkg, onEdit, onDelete, delay }: {
 
       <style jsx>{`
         .pkg-card {
+          position: relative;
+          z-index: 0;
           background: white; border-radius: 18px;
           border: 1px solid rgba(0,0,0,0.05);
           box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-          overflow: hidden;
+          overflow: visible;
           opacity: 0; transform: translateY(14px);
           transition: opacity 0.4s cubic-bezier(0.16,1,0.3,1),
                       transform 0.4s cubic-bezier(0.16,1,0.3,1),
                       box-shadow 0.2s ease;
         }
         .pkg-card--visible { opacity: 1; transform: translateY(0); }
+        .pkg-card--menu-open {
+          z-index: 40;
+          box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        }
         .pkg-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.09); }
-        .category-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; }
+        .category-bar {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 8px 16px;
+          border-radius: 18px 18px 0 0;
+          overflow: hidden;
+        }
         .category-text { font-size: 11px; font-weight: 700; color: #4A4A4A; letter-spacing: 0.04em; text-transform: uppercase; }
         .service-tag { font-size: 11px; font-weight: 600; }
-        .card-body { padding: 16px; }
+        .card-body {
+          padding: 16px;
+          border-radius: 0 0 18px 18px;
+          background: #fff;
+        }
         .card-main { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
         .pkg-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; flex-shrink: 0; }
         .pkg-info { flex: 1; min-width: 0; }
@@ -264,15 +316,33 @@ function PackageCard({ pkg, onEdit, onDelete, delay }: {
         .stat-pending { background: rgba(245,197,163,0.25); color: #C07040; }
         .stat-none { background: #F0EDE6; color: #B0B0B0; }
         .card-actions { display: flex; gap: 8px; align-items: center; }
-        .menu-wrapper { position: relative; }
+        .menu-wrapper { position: relative; z-index: 2; }
         .menu-btn { width: 32px; height: 32px; background: transparent; border: none; border-radius: 8px; font-size: 18px; color: #9B9B9B; cursor: pointer; transition: all 0.15s ease; display: flex; align-items: center; justify-content: center; }
         .menu-btn:hover { background: #F0EDE6; color: #1A1A1A; }
-        .menu-dropdown { position: absolute; top: 36px; right: 0; background: white; border-radius: 12px; padding: 6px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); border: 1px solid rgba(0,0,0,0.06); min-width: 120px; z-index: 50; animation: dropIn 0.2s cubic-bezier(0.16,1,0.3,1); }
+        .menu-dropdown {
+          position: absolute;
+          top: calc(100% + 6px);
+          right: 0;
+          background: white;
+          border-radius: 12px;
+          padding: 6px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+          border: 1px solid rgba(0,0,0,0.08);
+          min-width: 132px;
+          z-index: 100;
+          animation: dropIn 0.2s cubic-bezier(0.16,1,0.3,1);
+        }
+        .menu-dropdown--up {
+          top: auto;
+          bottom: calc(100% + 6px);
+          animation: dropInUp 0.2s cubic-bezier(0.16,1,0.3,1);
+        }
         .menu-item { display: block; width: 100%; padding: 9px 14px; background: transparent; border: none; border-radius: 8px; font-size: 14px; color: #1A1A1A; text-align: left; cursor: pointer; transition: background 0.15s ease; }
         .menu-item:hover { background: #F7F5F0; }
         .menu-item--danger { color: #D94040; }
         .menu-item--danger:hover { background: #FFF0F0; }
         @keyframes dropIn { from { opacity: 0; transform: translateY(-8px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes dropInUp { from { opacity: 0; transform: translateY(8px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
       `}</style>
     </div>
   );
